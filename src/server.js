@@ -17,10 +17,11 @@ app.use(helmet());
 app.use(express.json());
 
 
+const cors = require('cors');
 app.use(cors({
   origin: '*', 
-  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'x-admin-secret']
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
 }));
 
 // Rate limiting — prevent abuse
