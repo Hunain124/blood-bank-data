@@ -1,6 +1,3 @@
-// =============================================
-// KARACHI BLOOD BANK FINDER - SERVER
-// =============================================
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -11,24 +8,18 @@ const { createClient } = require('@supabase/supabase-js');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ── Supabase Client ──────────────────────────
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
 );
 
-// ── Middleware ───────────────────────────────
 app.use(helmet());
 app.use(express.json());
 
-// CORS — allow your frontend domain
+
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL,
-    'http://localhost:5500',  // local dev
-    'http://127.0.0.1:5500'
-  ],
-  methods: ['GET', 'POST'],
+  origin: '*', 
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'x-admin-secret']
 }));
 
@@ -46,7 +37,6 @@ const donorLimiter = rateLimit({
 app.use('/api/', limiter);
 
 
-// ── Helper ───────────────────────────────────
 const adminAuth = (req, res, next) => {
   const secret = req.headers['x-admin-secret'];
   if (!secret || secret !== process.env.ADMIN_SECRET) {
@@ -55,20 +45,10 @@ const adminAuth = (req, res, next) => {
   next();
 };
 
-
-// ============================================
-// ROUTES
-// ============================================
-
-// Health check
 app.get('/', (req, res) => {
   res.json({ status: 'ok', message: 'Karachi Blood Bank API is running.' });
 });
 
-
-// ── GET /api/banks ───────────────────────────
-// Returns all active blood banks
-// Optional query: ?area=Saddar  ?tag=free  ?tag=open24
 app.get('/api/banks', async (req, res) => {
   try {
     let query = supabase
@@ -77,12 +57,10 @@ app.get('/api/banks', async (req, res) => {
       .eq('is_active', true)
       .order('name', { ascending: true });
 
-    // Filter by area
     if (req.query.area) {
       query = query.ilike('area', `%${req.query.area}%`);
     }
 
-    // Filter by tag (free or open24)
     if (req.query.tag) {
       query = query.contains('tags', [req.query.tag]);
     }
@@ -97,9 +75,6 @@ app.get('/api/banks', async (req, res) => {
   }
 });
 
-
-// ── GET /api/banks/:id ───────────────────────
-// Returns a single blood bank by ID
 app.get('/api/banks/:id', async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -118,9 +93,6 @@ app.get('/api/banks/:id', async (req, res) => {
   }
 });
 
-
-// ── POST /api/donors ─────────────────────────
-// Register a new blood donor
 app.post('/api/donors', donorLimiter, async (req, res) => {
   try {
     const { full_name, phone, email, blood_group, area, age, last_donated, notes } = req.body;
@@ -159,9 +131,6 @@ app.post('/api/donors', donorLimiter, async (req, res) => {
   }
 });
 
-
-// ── POST /api/contact ─────────────────────────
-// Save a contact/email inquiry
 app.post('/api/contact', async (req, res) => {
   try {
     const { bank_id, sender_name, sender_email, blood_group, message } = req.body;
@@ -189,9 +158,6 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-
-// ── GET /api/donors/search ───────────────────
-// Search donors by blood group (public — no personal info returned)
 app.get('/api/donors/search', async (req, res) => {
   try {
     const { blood_group, area } = req.query;
@@ -226,12 +192,6 @@ app.get('/api/donors/search', async (req, res) => {
   }
 });
 
-
-// ============================================
-// ADMIN ROUTES (protected by ADMIN_SECRET)
-// ============================================
-
-// GET all donors (admin only — includes personal info)
 app.get('/api/admin/donors', adminAuth, async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -246,7 +206,6 @@ app.get('/api/admin/donors', adminAuth, async (req, res) => {
   }
 });
 
-// GET all contact requests (admin only)
 app.get('/api/admin/contacts', adminAuth, async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -261,7 +220,6 @@ app.get('/api/admin/contacts', adminAuth, async (req, res) => {
   }
 });
 
-// POST add a new blood bank (admin only)
 app.post('/api/admin/banks', adminAuth, async (req, res) => {
   try {
     const { name, area, address, phone, phone_alt, email, timing, tags, services, note, lat, lng } = req.body;
@@ -283,7 +241,6 @@ app.post('/api/admin/banks', adminAuth, async (req, res) => {
   }
 });
 
-// PATCH update a blood bank (admin only)
 app.patch('/api/admin/banks/:id', adminAuth, async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -300,7 +257,6 @@ app.patch('/api/admin/banks/:id', adminAuth, async (req, res) => {
   }
 });
 
-// DELETE (soft-delete) a blood bank (admin only)
 app.delete('/api/admin/banks/:id', adminAuth, async (req, res) => {
   try {
     const { error } = await supabase
@@ -315,20 +271,15 @@ app.delete('/api/admin/banks/:id', adminAuth, async (req, res) => {
   }
 });
 
-
-// ── 404 Handler ──────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found.' });
 });
 
-// ── Global Error Handler ─────────────────────
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(500).json({ error: 'Internal server error.' });
 });
 
-
-// ── Start Server ─────────────────────────────
 app.listen(PORT, () => {
   console.log(`\n🩸 Karachi Blood Bank API running on port ${PORT}`);
   console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
