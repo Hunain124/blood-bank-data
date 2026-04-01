@@ -174,6 +174,44 @@ function closeEmailModal() {
     document.getElementById('emailModal').classList.remove('open');
 }
 
+async function sendEmail() {
+    const name = document.getElementById('eName').value.trim();
+    const from = document.getElementById('eFrom').value.trim();
+    const group = document.getElementById('eGroup').value.trim();
+    const msg = document.getElementById('eMsg').value.trim();
+    
+    if (!name || !from || !group) { 
+        alert('Please fill in your name, email, and blood group.'); 
+        return; 
+    }
+
+    // 1. Save record to your Backend/Database
+    try {
+        await fetch(`${API_BASE}/api/contact`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                bank_id: currentEmailBank.id, 
+                sender_name: name, 
+                sender_email: from, 
+                blood_group: group, 
+                message: msg 
+            })
+        });
+        console.log("Inquiry logged to database successfully.");
+    } catch(e) { 
+        console.warn("Database logging failed, but opening email app anyway."); 
+    }
+
+    // 2. Open User's Email App (Gmail/Outlook etc.)
+    const subject = encodeURIComponent(`Blood Request — ${group} needed urgently`);
+    const body = encodeURIComponent(`Dear ${currentEmailBank.name} Team,\n\nMy name is ${name} and I am looking for ${group} blood.\n\nMessage: ${msg}\n\nPlease reach out to me at: ${from}\n\nSent via Karachi Blood Finder.`);
+    
+    window.location.href = `mailto:${currentEmailBank.email}?subject=${subject}&body=${body}`;
+    
+    closeEmailModal();
+}
+
 // ─────────────────────────────────────────────
 // DONOR REGISTRATION
 // ─────────────────────────────────────────────
