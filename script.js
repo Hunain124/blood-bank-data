@@ -185,7 +185,6 @@ async function sendEmail() {
         return; 
     }
 
-    // 1. Save record to your Backend/Database
     try {
         await fetch(`${API_BASE}/api/contact`, {
             method: 'POST',
@@ -198,17 +197,21 @@ async function sendEmail() {
                 message: msg 
             })
         });
-        console.log("Inquiry logged to database successfully.");
-    } catch(e) { 
-        console.warn("Database logging failed, but opening email app anyway."); 
-    }
 
-    // 2. Open User's Email App (Gmail/Outlook etc.)
+        // SweetAlert for Inquiry
+        Swal.fire({
+            icon: 'success',
+            title: 'Inquiry Sent!',
+            text: 'Your request has been logged. You will receive a response or a call within 5 to 10 minutes.',
+            confirmButtonColor: '#C8102E'
+        });
+
+    } catch(e) { console.warn("DB log failed"); }
+
     const subject = encodeURIComponent(`Blood Request — ${group} needed urgently`);
-    const body = encodeURIComponent(`Dear ${currentEmailBank.name} Team,\n\nMy name is ${name} and I am looking for ${group} blood.\n\nMessage: ${msg}\n\nPlease reach out to me at: ${from}\n\nSent via Karachi Blood Finder.`);
+    const body = encodeURIComponent(`Dear ${currentEmailBank.name} Team,\n\nMy name is ${name} and I need ${group} blood.\n\nContact: ${from}`);
     
     window.location.href = `mailto:${currentEmailBank.email}?subject=${subject}&body=${body}`;
-    
     closeEmailModal();
 }
 
@@ -220,24 +223,62 @@ async function submitDonor() {
     const body = {
         full_name: document.getElementById('dName').value.trim(),
         phone: document.getElementById('dPhone').value.trim(),
-        blood_group: document.getElementById('dGroup').value
+        email: document.getElementById('dEmail').value.trim(),
+        blood_group: document.getElementById('dGroup').value,
+        area: document.getElementById('dArea').value.trim(),
+        age: parseInt(document.getElementById('dAge').value) || null,
+        last_donated: document.getElementById('dLast').value.trim(),
+        notes: document.getElementById('dNote').value.trim()
     };
 
-    if (!body.full_name || !body.phone) {
-        showMsg('error', '⚠️ Fill required fields.');
+    if (!body.full_name || !body.phone || !body.blood_group) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Please fill in your name, phone, and blood group!',
+            confirmButtonColor: '#C8102E'
+        });
         return;
     }
 
     btn.disabled = true;
+    btn.textContent = 'Registering...';
+
     try {
         const res = await fetch(`${API_BASE}/api/donors`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
         });
-        if (res.ok) showMsg('success', '✅ Registered!');
-    } catch(err) { showMsg('error', '❌ Error.'); }
-    finally { btn.disabled = false; }
+
+        if (res.ok) {
+            // SweetAlert Success
+            Swal.fire({
+                icon: 'success',
+                title: 'Registration Successful!',
+                text: 'Thank you for registering. You will receive a verification call within 5 to 10 minutes.',
+                confirmButtonColor: '#C8102E'
+            });
+
+            // Form clear
+            ['dName','dPhone','dEmail','dGroup','dArea','dAge','dLast','dNote'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el.tagName === 'SELECT') el.selectedIndex = 0; else el.value = '';
+            });
+        } else {
+            throw new Error('Failed');
+        }
+    } catch(err) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Connection Error',
+            text: 'Could not connect to the server. Please try again later.',
+            confirmButtonColor: '#C8102E'
+        });
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Register Now ❤️';
+    }
 }
 
 function showMsg(type, text) {
