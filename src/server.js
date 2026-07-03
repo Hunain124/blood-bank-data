@@ -8,10 +8,22 @@ const { createClient } = require('@supabase/supabase-js');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
+const missingVars = [];
+if (!process.env.SUPABASE_URL) missingVars.push('SUPABASE_URL');
+if (!process.env.SUPABASE_SERVICE_KEY) missingVars.push('SUPABASE_SERVICE_KEY');
+if (missingVars.length > 0) {
+  console.error('MISSING ENV VARS:', missingVars.join(', '));
+}
+
+let supabase;
+try {
+  supabase = createClient(
+    process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
+    process.env.SUPABASE_SERVICE_KEY || 'placeholder-key'
+  );
+} catch (err) {
+  console.error('SUPABASE CLIENT CREATION FAILED:', err.message);
+}
 
 app.use(helmet());
 app.use(express.json());
@@ -46,7 +58,12 @@ const adminAuth = (req, res, next) => {
 };
 
 app.get('/', (req, res) => {
-  res.json({ status: 'ok', message: 'Karachi Blood Bank API is running.' });
+  res.json({
+    status: missingVars.length ? 'error' : 'ok',
+    message: missingVars.length
+      ? 'API running but missing env vars: ' + missingVars.join(', ')
+      : 'Karachi Blood Bank API is running.'
+  });
 });
 
 app.get('/api/banks', async (req, res) => {
