@@ -88,7 +88,7 @@ app.get('/api/banks', async (req, res) => {
     res.json({ success: true, count: data.length, banks: data });
   } catch (err) {
     console.error('GET /api/banks error:', err);
-    res.status(500).json({ error: 'Failed to fetch blood banks.', debug: err.message });
+    res.status(500).json({ error: 'Failed to fetch blood banks.' });
   }
 });
 
