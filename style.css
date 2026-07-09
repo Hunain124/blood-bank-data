@@ -142,3 +142,6 @@
     .section, .form-section { padding: 1.5rem 1rem; }
     .card-bottom { justify-content: flex-start; }
   }
+  @media (max-width: 767px) {
+    .nav-logo { display: none; }
+  }
