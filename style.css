@@ -10,13 +10,13 @@
   body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; }
 
   /* NAV */
-  nav { background: var(--red); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(200,16,46,0.25); }
+  nav { background: var(--red-light); padding: 2rem 2rem; display: flex; align-items: center; justify-content: space-between; height: 100px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(200,16,46,0.25); }
   .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-  .nav-logo svg { width: 28px; height: 28px; }
-  .nav-logo span { font-family: var(--font-head); font-size: 20px; color: white; }
+  .nav-logo svg { width: 28px; height: 28px; fill: rgb(255, 3, 3); }
+  .nav-logo span { font-family: var(--font-head); font-size: 20px; color: var(--red); }
   .nav-links { display: flex; gap: 6px; }
-  .nav-links a { color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; text-decoration: none; padding: 6px 14px; border-radius: 8px; transition: background 0.15s; }
-  .nav-links a:hover { background: rgba(255,255,255,0.15); color: white; }
+  .nav-links a { color: var(--red); font-size: 13px; font-weight: 500; text-decoration: none; padding: 6px 14px; border-radius: 8px; transition: background 0.15s; }
+  .nav-links a:hover { background: rgba(255,255,255,0.15); color:var(--red-dark); }
 
   /* HERO */
   .hero { background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%); padding: 3.5rem 2rem 3rem; text-align: center; position: relative; overflow: hidden; }
